@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 상담</title>
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+</head>
+<body>
+<div class="chat-container">
+    <th:block th:replace="~{partials/_header :: header}"></th:block>
+    <th:block th:replace="~{partials/_body :: body}"></th:block>
+</div>
+
+<script th:inline="javascript">
+    window.SESSION_ID = /*[[${sessionId}]]*/ '';
+</script>
+<script th:src="@{/js/chat.js}"></script>
+</body>
+</html>

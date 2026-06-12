@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="header">
+    <div class="chat-header">
+        <div class="avatar">🐧</div>
+        <div class="info">
+            <div class="name">AI 상담원</div>
+            <div class="status" id="statusText">연결 중...</div>
+        </div>
+        <button onclick="window.close()" class="close-btn">✕</button>
+    </div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="body">
+    <div class="chat-messages" id="messages">
+        <div class="system-msg">상담을 시작합니다.</div>
+    </div>
+
+    <div class="typing-row" id="typingRow" style="display:none;">
+        <div class="typing-indicator" id="typing">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <div class="category-wrapper">
+        <button class="cat-nav" id="catLeft">&#8249;</button>
+        <div class="category-bar" id="categoryBar">
+            <button class="category-btn" data-category="주문조회">주문조회</button>
+            <button class="category-btn" data-category="유저조회">유저조회</button>
+        </div>
+        <button class="cat-nav" id="catRight">&#8250;</button>
+    </div>
+
+    <div class="chat-input-area">
+        <input type="text" id="input" placeholder="메시지를 입력하세요..." autocomplete="off" disabled />
+        <button class="send-btn" id="sendBtn" disabled>
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white">
+                <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+            </svg>
+        </button>
+    </div>
+</th:block>
+</body>
+</html>

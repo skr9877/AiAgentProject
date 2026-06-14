@@ -1,4 +1,4 @@
-package com.example.chatbot.tools.user;
+package com.example.chatbot.tools.user.model;
 
 public class User {
     private int userId;

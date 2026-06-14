@@ -1,4 +1,4 @@
-package com.example.chatbot.service;
+package com.example.chatbot.gemini.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

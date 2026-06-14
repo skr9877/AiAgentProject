@@ -1,4 +1,4 @@
-package com.example.chatbot.service;
+package com.example.chatbot.gemini.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
-package com.example.chatbot.tools.user.db;
+package com.example.chatbot.tools.user.repository;
 
-import com.example.chatbot.tools.user.User;
+import com.example.chatbot.tools.user.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

@@ -1,6 +1,6 @@
-package com.example.chatbot.tools.order.api;
+package com.example.chatbot.tools.order.client;
 
-import com.example.chatbot.tools.order.Order;
+import com.example.chatbot.tools.order.model.Order;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;

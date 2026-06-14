@@ -1,5 +1,7 @@
-package com.example.chatbot.service;
+package com.example.chatbot.chatting.service;
 
+import com.example.chatbot.gemini.service.GeminiService;
+import com.example.chatbot.gemini.service.ResponseFilterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +25,7 @@ public class ChatService {
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, List<Map<String, String>>> histories = new ConcurrentHashMap<>();
+    private final Map<String, String> userIds = new ConcurrentHashMap<>();
 
     private final GeminiService geminiService;
     private final ResponseFilterService responseFilterService;
@@ -32,7 +35,7 @@ public class ChatService {
         this.responseFilterService = responseFilterService;
     }
 
-    public boolean connect(WebSocketSession session, String sessionId) throws Exception {
+    public boolean connect(WebSocketSession session, String sessionId, String userId) throws Exception {
         if (sessions.size() >= maxConnections) {
             session.sendMessage(new TextMessage("SYSTEM:서버가 혼잡합니다. 잠시 후 다시 시도해주세요."));
             session.close();
@@ -40,14 +43,17 @@ public class ChatService {
         }
         sessions.put(sessionId, session);
         histories.put(sessionId, new ArrayList<>());
-        logger.info("세션 연결: {} (현재 {}개)", sessionId, sessions.size());
+        userIds.put(sessionId, userId);
+        logger.info("[{}] 세션 연결 (현재 {}개)", userId, sessions.size());
         return true;
     }
 
     public void disconnect(String sessionId) {
+        String userId = userIds.getOrDefault(sessionId, "unknown");
         sessions.remove(sessionId);
         histories.remove(sessionId);
-        logger.info("세션 해제: {} (현재 {}개)", sessionId, sessions.size());
+        userIds.remove(sessionId);
+        logger.info("[{}] 세션 해제 (현재 {}개)", userId, sessions.size());
     }
 
     public void sendMessage(String sessionId, String message) throws Exception {
@@ -58,6 +64,7 @@ public class ChatService {
     }
 
     public String getAiResponse(String sessionId, String userMessage, List<String> categories) {
+        String userId = userIds.getOrDefault(sessionId, "unknown");
         List<Map<String, String>> history = histories.computeIfAbsent(sessionId, k -> new ArrayList<>());
 
         Map<String, String> userTurn = new HashMap<>();
@@ -76,6 +83,7 @@ public class ChatService {
         assistantTurn.put("content", filtered);
         history.add(assistantTurn);
 
+        logger.info("[{}] AI 응답 완료 (히스토리 {}턴)", userId, history.size() / 2);
         return filtered;
     }
 

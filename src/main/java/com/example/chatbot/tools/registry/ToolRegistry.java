@@ -1,8 +1,8 @@
 package com.example.chatbot.tools.registry;
 
-import com.example.chatbot.tools.order.OrderApiTool;
-import com.example.chatbot.tools.order.OrderRepositoryTool;
-import com.example.chatbot.tools.user.UserRepositoryTool;
+import com.example.chatbot.tools.order.service.OrderApiTool;
+import com.example.chatbot.tools.order.service.OrderRepositoryTool;
+import com.example.chatbot.tools.user.service.UserRepositoryTool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 

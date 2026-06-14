@@ -1,6 +1,6 @@
-package com.example.chatbot.tools.order.db;
+package com.example.chatbot.tools.order.repository;
 
-import com.example.chatbot.tools.order.Order;
+import com.example.chatbot.tools.order.model.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

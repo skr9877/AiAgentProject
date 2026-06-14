@@ -1,6 +1,6 @@
-package com.example.chatbot.handler;
+package com.example.chatbot.chatting.handler;
 
-import com.example.chatbot.service.ChatService;
+import com.example.chatbot.chatting.service.ChatService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -30,13 +30,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sessionId = extractSessionId(session);
-        logger.info("WebSocket 연결: {}", sessionId);
-        chatService.connect(session, sessionId);
+        String userId = extractUserId(session);
+        chatService.connect(session, sessionId, userId);
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String sessionId = extractSessionId(session);
+        String userId = extractUserId(session);
         String payload = message.getPayload();
 
         String userMessage;
@@ -57,20 +58,35 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         if (userMessage.isBlank()) return;
 
+        logger.info("[{}] 사용자 입력: {}", userId, userMessage);
+
         chatService.sendMessage(sessionId, "고객: " + userMessage);
         String aiReply = chatService.getAiResponse(sessionId, userMessage, categories);
         chatService.sendMessage(sessionId, "AI: " + aiReply);
+
+        logger.info("[{}] AI 최종 답변: {}", userId, aiReply);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String sessionId = extractSessionId(session);
-        logger.info("WebSocket 해제: {}", sessionId);
         chatService.disconnect(sessionId);
     }
 
     private String extractSessionId(WebSocketSession session) {
         String path = session.getUri().getPath();
         return path.substring(path.lastIndexOf('/') + 1);
+    }
+
+    private String extractUserId(WebSocketSession session) {
+        String query = session.getUri().getQuery();
+        if (query != null) {
+            for (String param : query.split("&")) {
+                if (param.startsWith("userId=")) {
+                    return param.substring("userId=".length());
+                }
+            }
+        }
+        return "unknown";
     }
 }

@@ -1,6 +1,7 @@
-package com.example.chatbot.tools.order;
+package com.example.chatbot.tools.order.service;
 
-import com.example.chatbot.tools.order.db.OrderRepository;
+import com.example.chatbot.tools.order.client.OrderApiClient;
+import com.example.chatbot.tools.order.model.Order;
 import com.example.chatbot.tools.registry.ToolDefinition;
 import org.springframework.stereotype.Component;
 
@@ -8,26 +9,26 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class OrderRepositoryTool {
+public class OrderApiTool {
 
-    private final OrderRepository orderRepository;
+    private final OrderApiClient orderApiClient;
 
-    public OrderRepositoryTool(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public OrderApiTool(OrderApiClient orderApiClient) {
+        this.orderApiClient = orderApiClient;
     }
 
     public List<Order> getOrdersByCustomer(int customerId) {
-        return orderRepository.findByCustomer(customerId);
+        return orderApiClient.findByCustomer(customerId);
     }
 
     public Order getOrderDetail(int orderId) {
-        return orderRepository.findById(orderId);
+        return orderApiClient.findById(orderId);
     }
 
     public static final List<ToolDefinition> TOOL_SPECS = List.of(
             new ToolDefinition(
-                    "get_orders_by_customer_db",
-                    "DB에서 고객 ID로 주문 목록을 조회합니다.",
+                    "get_orders_by_customer_api",
+                    "외부 API에서 고객 ID로 주문 목록을 조회합니다.",
                     Map.of(
                             "type", "object",
                             "properties", Map.of(
@@ -37,8 +38,8 @@ public class OrderRepositoryTool {
                     )
             ),
             new ToolDefinition(
-                    "get_order_detail_db",
-                    "DB에서 주문 ID로 주문 상세 정보를 조회합니다.",
+                    "get_order_detail_api",
+                    "외부 API에서 주문 ID로 주문 상세 정보를 조회합니다.",
                     Map.of(
                             "type", "object",
                             "properties", Map.of(

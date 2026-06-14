@@ -2,7 +2,7 @@
 target/
 *.log
 
-# API 키 / DB 접속 정보 (절대 커밋 금지)
+# API 키 (절대 커밋 금지)
 src/main/resources/ai.properties
 
 # Claude Code 설정

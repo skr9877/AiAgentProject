@@ -1,4 +1,4 @@
-package com.example.chatbot.tools.order.model;
+package com.example.chatbot.tools.order.entity;
 
 public class Order {
     private int orderId;

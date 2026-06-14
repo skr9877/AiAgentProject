@@ -16,15 +16,4 @@ public class ToolDefinition {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public Map<String, Object> getParameters() { return parameters; }
-
-    public Map<String, Object> toSpec() {
-        return Map.of(
-                "type", "function",
-                "function", Map.of(
-                        "name", name,
-                        "description", description,
-                        "parameters", parameters
-                )
-        );
-    }
 }

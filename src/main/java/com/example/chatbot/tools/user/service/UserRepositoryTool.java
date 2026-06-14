@@ -1,8 +1,8 @@
 package com.example.chatbot.tools.user.service;
 
 import com.example.chatbot.tools.registry.ToolDefinition;
-import com.example.chatbot.tools.user.model.User;
-import com.example.chatbot.tools.user.repository.UserRepository;
+import com.example.chatbot.tools.user.entity.User;
+import com.example.chatbot.tools.user.db.UserRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

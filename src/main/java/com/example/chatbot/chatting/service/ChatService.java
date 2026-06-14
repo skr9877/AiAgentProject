@@ -86,8 +86,4 @@ public class ChatService {
         logger.info("[{}] AI 응답 완료 (히스토리 {}턴)", userId, history.size() / 2);
         return filtered;
     }
-
-    public int getCurrentConnections() {
-        return sessions.size();
-    }
 }

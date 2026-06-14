@@ -1,7 +1,7 @@
 package com.example.chatbot.tools.order.service;
 
-import com.example.chatbot.tools.order.model.Order;
-import com.example.chatbot.tools.order.repository.OrderRepository;
+import com.example.chatbot.tools.order.entity.Order;
+import com.example.chatbot.tools.order.db.OrderRepository;
 import com.example.chatbot.tools.registry.ToolDefinition;
 import org.springframework.stereotype.Component;
 

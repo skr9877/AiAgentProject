@@ -2,7 +2,7 @@ package com.example.chatbot.tools.registry;
 
 import java.util.Map;
 
-public class db pToolDefinition {
+public class ToolDefinition {
     private final String name;
     private final String description;
     private final Map<String, Object> parameters;

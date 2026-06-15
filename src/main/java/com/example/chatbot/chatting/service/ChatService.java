@@ -1,9 +1,16 @@
 package com.example.chatbot.chatting.service;
 
-import com.example.chatbot.gemini.service.GeminiService;
-import com.example.chatbot.gemini.service.ResponseFilterService;
+import com.example.chatbot.chatting.service.ResponseFilterService;
+import com.example.chatbot.tools.order.service.OrderApiTool;
+import com.example.chatbot.tools.order.service.OrderRepositoryTool;
+import com.example.chatbot.tools.user.service.UserRepositoryTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -11,6 +18,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -27,11 +35,21 @@ public class ChatService {
     private final Map<String, List<Map<String, String>>> histories = new ConcurrentHashMap<>();
     private final Map<String, String> userIds = new ConcurrentHashMap<>();
 
-    private final GeminiService geminiService;
+    private final ChatClient chatClient;
+    private final OrderRepositoryTool orderRepositoryTool;
+    private final OrderApiTool orderApiTool;
+    private final UserRepositoryTool userRepositoryTool;
     private final ResponseFilterService responseFilterService;
 
-    public ChatService(GeminiService geminiService, ResponseFilterService responseFilterService) {
-        this.geminiService = geminiService;
+    public ChatService(ChatClient chatClient,
+                       OrderRepositoryTool orderRepositoryTool,
+                       OrderApiTool orderApiTool,
+                       UserRepositoryTool userRepositoryTool,
+                       ResponseFilterService responseFilterService) {
+        this.chatClient = chatClient;
+        this.orderRepositoryTool = orderRepositoryTool;
+        this.orderApiTool = orderApiTool;
+        this.userRepositoryTool = userRepositoryTool;
         this.responseFilterService = responseFilterService;
     }
 
@@ -73,17 +91,44 @@ public class ChatService {
         history.add(userTurn);
 
         int fromIndex = Math.max(0, history.size() - maxHistoryTurns);
-        List<Map<String, String>> recentHistory = new ArrayList<>(history.subList(fromIndex, history.size()));
+        List<Message> messages = history.subList(fromIndex, history.size()).stream()
+                                        .<Message>map(turn -> "assistant".equals(turn.get("role"))
+                                                ? new AssistantMessage(turn.get("content"))
+                                                : new UserMessage(turn.get("content")))
+                                        .collect(Collectors.toList());
 
-        String raw = geminiService.generateResponse(recentHistory, categories);
-        String filtered = responseFilterService.sanitizeImageTags(raw);
+        try {
+            String raw = chatClient.prompt(new Prompt(messages))
+                    .tools(selectTools(categories))
+                    .call()
+                    .content();
 
-        Map<String, String> assistantTurn = new HashMap<>();
-        assistantTurn.put("role", "assistant");
-        assistantTurn.put("content", filtered);
-        history.add(assistantTurn);
+            String filtered = responseFilterService.sanitizeImageTags(raw);
 
-        logger.info("[{}] AI 응답 완료 (히스토리 {}턴)", userId, history.size() / 2);
-        return filtered;
+            Map<String, String> assistantTurn = new HashMap<>();
+            assistantTurn.put("role", "assistant");
+            assistantTurn.put("content", filtered);
+            history.add(assistantTurn);
+
+            logger.info("[{}] AI 응답 완료 (히스토리 {}턴)", userId, history.size() / 2);
+            return filtered;
+        } catch (Exception e) {
+            logger.error("AI 응답 실패: {}", e.getMessage());
+            return "죄송합니다. 현재 서비스를 이용할 수 없습니다. [" + e.getMessage() + "]";
+        }
+    }
+
+    private Object[] selectTools(List<String> categories) {
+        if (categories == null || categories.isEmpty()) {
+            return new Object[0];
+        }
+        Set<Object> tools = new LinkedHashSet<>();
+        for (String cat : categories) {
+            switch (cat) {
+                case "주문조회" -> { tools.add(orderRepositoryTool); tools.add(orderApiTool); }
+                case "유저조회" -> tools.add(userRepositoryTool);
+            }
+        }
+        return tools.toArray();
     }
 }

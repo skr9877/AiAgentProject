@@ -6,12 +6,6 @@
 # 커밋되지 않습니다.
 # =============================================
 
-# Gemini AI API 키 (Google AI Studio에서 발급)
+# Gemini API 키 (Google AI Studio에서 발급)
 # https://aistudio.google.com/app/apikey
-gemini.api-key=YOUR_GEMINI_API_KEY
-
-# 사용할 Gemini 모델명
-gemini.model=gemini-2.5-flash
-
-# Gemini REST API 엔드포인트 (변경 불필요)
-gemini.endpoint-base=https://generativelanguage.googleapis.com/v1beta
+spring.ai.google.genai.api-key=YOUR_GEMINI_API_KEY

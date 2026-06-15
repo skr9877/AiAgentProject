@@ -1,7 +1,8 @@
 # AI Agent Chatbot
 
 Spring Boot + WebSocket 기반 AI 상담 챗봇.  
-Google Gemini API로 자연어를 처리하고 Tool Calling으로 DB / 외부 API 데이터를 조회한다.
+Spring AI `ChatClient`로 자연어를 처리하고 `@Tool` 애노테이션으로 DB / 외부 API 데이터를 조회한다.  
+AI 제공자(Gemini, WatsonX 등)를 코드 변경 없이 설정 파일로 교체 가능.
 
 ---
 
@@ -9,9 +10,10 @@ Google Gemini API로 자연어를 처리하고 Tool Calling으로 DB / 외부 AP
 
 | 계층 | 기술 |
 |---|---|
-| 웹 프레임워크 | Spring Boot 3.x |
+| 웹 프레임워크 | Spring Boot 3.4.4 |
 | WebSocket | Spring WebSocket (raw, STOMP 없음) |
-| AI | Google Gemini API (gemini-2.5-flash) |
+| AI 추상화 | Spring AI 1.1.8 (ChatClient) |
+| AI 제공자 (현재) | Google Gemini (gemini-2.5-flash) |
 | DB | Oracle (JDBC / NamedParameterJdbcTemplate) |
 | 외부 API | RestTemplate |
 | 프론트엔드 | Thymeleaf + Vanilla JS |
@@ -33,39 +35,32 @@ mvn spring-boot:run
 
 | 파일 | 용도 | gitignore |
 |---|---|---|
-| `application.properties` | 서버 포트, 공통 설정, import 선언 | X (커밋됨) |
+| `application.properties` | 서버 포트, Spring AI 설정, import 선언 | X (커밋됨) |
 | `ai.properties` | Gemini API 키 (직접 생성 필요) | O |
-| `ai.properties.sample` | ai.properties 샘플 (참고용) | X (커밋됨) |
 | `db.properties` | Oracle DB 접속 정보 | X (커밋됨) |
+| `application-watsonx.properties` | WatsonX 전환 샘플 설정 | X (커밋됨) |
 
-세 파일 모두 서버 시작 시 Spring Boot가 직접 읽는다. (`spring.config.import`)
+### Gemini API 키 설정
 
-### ai.properties 설정 방법
+`ai.properties.sample`을 복사해 `ai.properties`로 만든 뒤 실제 키 입력:
 
 ```bash
-# sample 파일을 복사해서 실제 파일 생성
 cp src/main/resources/ai.properties.sample src/main/resources/ai.properties
 ```
 
-이후 `ai.properties`에 실제 Gemini API 키 입력:
-
 ```properties
-gemini.api-key=YOUR_GEMINI_API_KEY
-gemini.model=gemini-2.5-flash
-gemini.endpoint-base=https://generativelanguage.googleapis.com/v1beta
+spring.ai.google.genai.api-key=YOUR_GEMINI_API_KEY
 ```
 
 > Gemini API 키 발급: https://aistudio.google.com/app/apikey
 
-### db.properties 설정
+### DB 없이 실행
 
-Oracle DB 사용 시 `db.properties` 수정 후 `application.properties`의 아래 줄 제거:
+`application.properties`에 아래 줄 추가:
 
 ```properties
 spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 ```
-
-DB 없이 실행할 때는 위 줄을 그대로 두면 된다.
 
 ---
 
@@ -75,63 +70,32 @@ DB 없이 실행할 때는 위 줄을 그대로 두면 된다.
 src/main/java/com/example/chatbot/
 │
 ├── config/
+│   ├── AiConfig.java                   ChatClient Bean (Gemini 연결)
 │   ├── AppConfig.java                  RestTemplate, ObjectMapper Bean
 │   └── WebSocketConfig.java            /ws/{sessionId} 엔드포인트 등록
 │
-├── chatting/                           채팅 담당
+├── chatting/
 │   ├── controller/
-│   │   └── ChatController.java         GET → userId="user" / POST → userId=파라미터
+│   │   └── ChatController.java
 │   ├── handler/
-│   │   └── ChatWebSocketHandler.java   WebSocket 수신, userId 추출, 로그
+│   │   └── ChatWebSocketHandler.java   WebSocket 수신, userId 추출
 │   └── service/
-│       └── ChatService.java            세션·이력·userId 맵 관리, AI 응답 조율
-│
-├── gemini/                             Gemini AI 통신 담당
-│   └── service/
-│       ├── GeminiService.java          Gemini REST API 호출 / 응답 파싱
+│       ├── ChatService.java            세션·이력 관리, ChatClient 호출
 │       └── ResponseFilterService.java  AI 응답 후처리 (이미지 태그 검증)
 │
 └── tools/
-    ├── registry/
-    │   ├── ToolDefinition.java         툴 스펙 (name / description / parameters)
-    │   └── ToolRegistry.java           카테고리 → 툴 매핑 + dispatch()
-    │
-    ├── order/                          주문 도메인
-    │   ├── model/
-    │   │   └── Order.java
-    │   ├── service/
-    │   │   ├── OrderRepositoryTool.java  get_orders_by_customer_db, get_order_detail_db
-    │   │   └── OrderApiTool.java         get_orders_by_customer_api, get_order_detail_api
-    │   ├── repository/
-    │   │   └── OrderRepository.java      JDBC: orders 테이블 조회
-    │   └── client/
-    │       └── OrderApiClient.java       RestTemplate: 외부 주문 API 호출
-    │
-    └── user/                           유저 도메인
-        ├── model/
-        │   └── User.java
-        ├── service/
-        │   └── UserRepositoryTool.java   get_user, search_users
-        └── repository/
-            └── UserRepository.java       JDBC: users 테이블 조회
-```
-
----
-
-## 사용자 접속 방식
-
-| 방식 | URL | userId |
-|---|---|---|
-| GET | `http://localhost:8080/chat` | `"user"` (기본값) |
-| POST | `http://localhost:8080/chat` + `userId=파라미터` | 전달된 값 사용 |
-
-userId는 WebSocket 연결 시 쿼리 파라미터로 서버에 전달되며 로그에 기록된다.
-
-```
-[heesuk1125.kim] 세션 연결 (현재 1개)
-[heesuk1125.kim] 사용자 입력: 주문 조회해줘
-[heesuk1125.kim] AI 최종 답변: 안녕하세요! ...
-[heesuk1125.kim] 세션 해제 (현재 0개)
+    ├── order/
+    │   ├── entity/Order.java
+    │   ├── db/OrderRepository.java       JDBC: orders 테이블 조회
+    │   ├── api/OrderApiClient.java       RestTemplate: 외부 주문 API 호출
+    │   └── service/
+    │       ├── OrderRepositoryTool.java  @Tool: DB 주문 조회
+    │       └── OrderApiTool.java         @Tool: API 주문 조회
+    └── user/
+        ├── entity/User.java
+        ├── db/UserRepository.java        JDBC: users 테이블 조회
+        └── service/
+            └── UserRepositoryTool.java   @Tool: 유저 조회
 ```
 
 ---
@@ -144,14 +108,12 @@ userId는 WebSocket 연결 시 쿼리 파라미터로 서버에 전달되며 로
                         │
                         ▼
                    ChatService
-                        │ categories 전달
+                        │ categories → selectTools()
                         ▼
-                   GeminiService ◄──► Gemini API
+                   Spring AI ChatClient ◄──► AI 모델 (Gemini 등)
                         │
-                        │ tool_call 수신 시
+                        │ @Tool 자동 실행 (루프 자동 처리)
                         ▼
-                   ToolRegistry.dispatch()
-                        │
           ┌─────────────┼─────────────┐
           ▼             ▼             ▼
   OrderRepository  OrderApiClient  UserRepository
@@ -160,13 +122,55 @@ userId는 WebSocket 연결 시 쿼리 파라미터로 서버에 전달되며 로
 
 ---
 
-## 카테고리 → 툴 매핑
+## 카테고리 → Tool 매핑
 
-| 버튼 선택 | AI에게 제공되는 툴 |
+| 버튼 선택 | AI에게 제공되는 Tool |
 |---|---|
-| 주문조회 | `get_orders_by_customer_db` `get_order_detail_db` `get_orders_by_customer_api` `get_order_detail_api` |
-| 유저조회 | `get_user` `search_users` |
-| 선택 없음 | 전체 6개 툴 |
+| 주문조회 | `getOrdersByCustomerFromDb` `getOrderDetailFromDb` `getOrdersByCustomerFromApi` `getOrderDetailFromApi` |
+| 유저조회 | `getUser` `searchUsers` |
+| 선택 없음 | 없음 (일반 대화) |
+
+---
+
+## AI 제공자 전환 방법
+
+코드(ChatService, Tool 클래스) 변경 없이 아래 2가지만 수정하면 됨.
+
+### Gemini → WatsonX 전환
+
+**1. `pom.xml`**
+```xml
+<!-- 주석 처리 -->
+<!-- <dependency>spring-ai-starter-model-google-genai</dependency> -->
+
+<!-- 주석 해제 -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-model-openai</artifactId>
+</dependency>
+```
+
+**2. `application.properties`**
+```properties
+# 제거
+# spring.ai.google.genai.api-key=...
+
+# 추가 (WatsonX 모델 서버)
+spring.ai.openai.base-url=http://your-model-server
+spring.ai.openai.api-key=your-api-key   # → Authorization: Bearer <key> 자동 변환
+```
+
+> 상세 설정은 `application-watsonx.properties` 참고
+
+---
+
+## 새 Tool 추가하는 법
+
+1. `tools/{도메인}/entity/` — 엔티티 클래스 생성
+2. `tools/{도메인}/db/` 또는 `api/` — 데이터 접근 클래스 생성
+3. `tools/{도메인}/service/{도메인}Tool.java` 생성 후 메서드에 `@Tool` / `@ToolParam` 추가
+4. `ChatService.selectTools()` — 카테고리 switch에 새 Tool 빈 추가
+5. `_body.html` — 카테고리 버튼 추가
 
 ---
 
@@ -186,16 +190,6 @@ SYSTEM: 서버 공지
 
 ---
 
-## 새 Tool 추가하는 법
-
-1. `tools/{도메인}/model/` — 엔티티 클래스 생성
-2. `tools/{도메인}/repository/` 또는 `client/` — 데이터 접근 클래스 생성
-3. `tools/{도메인}/service/` — `{도메인}Tool.java`에 `TOOL_SPECS` 정의
-4. `ToolRegistry` — `getToolsForCategories()` switch에 카테고리 추가, `dispatch()` case 추가
-5. `_body.html` — 카테고리 버튼 추가
-
----
-
 ## 주요 설정값
 
 | 키 | 기본값 | 설명 |
@@ -203,5 +197,5 @@ SYSTEM: 서버 공지
 | `server.port` | 8080 | 서버 포트 |
 | `chat.max-connections` | 100 | 최대 동시 WebSocket 세션 수 |
 | `chat.max-history-turns` | 10 | 유지할 대화 이력 턴 수 |
-| `gemini.model` | gemini-2.5-flash | 사용할 Gemini 모델 |
+| `spring.ai.google.genai.chat.model` | gemini-2.5-flash | 사용할 Gemini 모델 |
 | `java.server.url` | http://localhost:8080 | 외부 주문 API 베이스 URL |

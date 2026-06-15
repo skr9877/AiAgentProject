@@ -107,18 +107,24 @@ function hideTyping() {
     typingRow.style.display = 'none';
 }
 
+function setUiBusy(busy) {
+    sendBtn.disabled = busy;
+    input.disabled = busy;
+    document.querySelectorAll('.category-btn').forEach(btn => { btn.disabled = busy; });
+}
+
 // _header.html: id="statusText" / _body.html: id="input", id="sendBtn" — WebSocket 연결 성공 시 UI 활성화
 ws.onopen = () => {
     statusText.textContent = '연결됨';
     statusText.style.color = '#a5f3c8';
-    input.disabled = false;
-    sendBtn.disabled = false;
+    setUiBusy(false);
     input.focus();
 };
 
 // _body.html: id="messages", id="typingRow" — 서버 메시지 수신 시 말풍선 렌더링
 ws.onmessage = (e) => {
     hideTyping();
+    setUiBusy(false);
     const text = e.data;
     if (text.startsWith('SYSTEM:')) {
         addMessage(text.replace('SYSTEM:', '').trim(), 'system');
@@ -133,8 +139,7 @@ ws.onmessage = (e) => {
 ws.onclose = () => {
     statusText.textContent = '연결 종료';
     statusText.style.color = '#fca5a5';
-    input.disabled = true;
-    sendBtn.disabled = true;
+    setUiBusy(true);
     hideTyping();
 };
 
@@ -148,6 +153,7 @@ ws.onerror = () => {
 function sendMessage() {
     const text = input.value.trim();
     if (!text || sendBtn.disabled || ws.readyState !== WebSocket.OPEN) return;
+    setUiBusy(true);
     ws.send(JSON.stringify({ text, categories: [...selectedCategories] }));
     input.value = '';
     showTyping();

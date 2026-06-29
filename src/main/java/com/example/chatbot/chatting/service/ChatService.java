@@ -3,6 +3,7 @@ package com.example.chatbot.chatting.service;
 import com.example.chatbot.chatting.service.ResponseFilterService;
 import com.example.chatbot.tools.order.service.OrderApiTool;
 import com.example.chatbot.tools.order.service.OrderRepositoryTool;
+import com.example.chatbot.tools.restaurant.service.RestaurantRepositoryTool;
 import com.example.chatbot.tools.user.service.UserRepositoryTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,17 +40,20 @@ public class ChatService {
     private final OrderRepositoryTool orderRepositoryTool;
     private final OrderApiTool orderApiTool;
     private final UserRepositoryTool userRepositoryTool;
+    private final RestaurantRepositoryTool restaurantRepositoryTool;
     private final ResponseFilterService responseFilterService;
 
     public ChatService(ChatClient chatClient,
                        OrderRepositoryTool orderRepositoryTool,
                        OrderApiTool orderApiTool,
                        UserRepositoryTool userRepositoryTool,
+                       RestaurantRepositoryTool restaurantRepositoryTool,
                        ResponseFilterService responseFilterService) {
         this.chatClient = chatClient;
         this.orderRepositoryTool = orderRepositoryTool;
         this.orderApiTool = orderApiTool;
         this.userRepositoryTool = userRepositoryTool;
+        this.restaurantRepositoryTool = restaurantRepositoryTool;
         this.responseFilterService = responseFilterService;
     }
 
@@ -127,6 +131,7 @@ public class ChatService {
             switch (cat) {
                 case "주문조회" -> { tools.add(orderRepositoryTool); tools.add(orderApiTool); }
                 case "유저조회" -> tools.add(userRepositoryTool);
+                case "식당조회" -> tools.add(restaurantRepositoryTool);
             }
         }
         return tools.toArray();

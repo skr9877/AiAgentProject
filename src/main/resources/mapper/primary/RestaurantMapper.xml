@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.chatbot.tools.restaurant.mapper.RestaurantMapper">
+
+    <select id="findById" resultType="MasterMap">
+        SELECT restaurant_id,
+               name,
+               address,
+               phone,
+               category,
+               rating,
+               open_time,
+               close_time
+        FROM MODEL_RESTAURANT
+        WHERE restaurant_id = #{restaurantId}
+    </select>
+
+    <select id="findByName" resultType="MasterMap">
+        SELECT restaurant_id,
+               name,
+               address,
+               phone,
+               category,
+               rating,
+               open_time,
+               close_time
+        FROM MODEL_RESTAURANT
+        WHERE name LIKE '%' || #{name} || '%'
+        ORDER BY name
+        FETCH FIRST 20 ROWS ONLY
+    </select>
+
+    <select id="findByCategory" resultType="MasterMap">
+        SELECT restaurant_id,
+               name,
+               address,
+               phone,
+               category,
+               rating,
+               open_time,
+               close_time
+        FROM MODEL_RESTAURANT
+        WHERE category = #{category}
+        ORDER BY rating DESC
+        FETCH FIRST 20 ROWS ONLY
+    </select>
+
+</mapper>

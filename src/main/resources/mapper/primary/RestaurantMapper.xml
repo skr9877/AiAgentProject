@@ -4,46 +4,49 @@
 
 <mapper namespace="com.example.chatbot.tools.restaurant.mapper.RestaurantMapper">
 
+    <sql id="columns">
+        ID,
+        BIZ_NAME,
+        ROAD_ADDR,
+        LOT_ADDR,
+        PHONE_NO,
+        MAIN_FOOD_TYPE,
+        FOOD_TYPE,
+        BIZ_STATUS_NM,
+        BIZ_STATUS_CD,
+        CLOSURE_DT,
+        APPLY_DT,
+        MGMT_NO
+    </sql>
+
     <select id="findById" resultType="MasterMap">
-        SELECT restaurant_id,
-               name,
-               address,
-               phone,
-               category,
-               rating,
-               open_time,
-               close_time
+        SELECT <include refid="columns"/>
         FROM MODEL_RESTAURANT
-        WHERE restaurant_id = #{restaurantId}
+        WHERE ID = #{id}
     </select>
 
     <select id="findByName" resultType="MasterMap">
-        SELECT restaurant_id,
-               name,
-               address,
-               phone,
-               category,
-               rating,
-               open_time,
-               close_time
+        SELECT <include refid="columns"/>
         FROM MODEL_RESTAURANT
-        WHERE name LIKE '%' || #{name} || '%'
-        ORDER BY name
+        WHERE BIZ_NAME LIKE '%' || #{bizName} || '%'
+        ORDER BY BIZ_NAME
         FETCH FIRST 20 ROWS ONLY
     </select>
 
-    <select id="findByCategory" resultType="MasterMap">
-        SELECT restaurant_id,
-               name,
-               address,
-               phone,
-               category,
-               rating,
-               open_time,
-               close_time
+    <select id="findByFoodType" resultType="MasterMap">
+        SELECT <include refid="columns"/>
         FROM MODEL_RESTAURANT
-        WHERE category = #{category}
-        ORDER BY rating DESC
+        WHERE MAIN_FOOD_TYPE LIKE '%' || #{foodType} || '%'
+           OR FOOD_TYPE LIKE '%' || #{foodType} || '%'
+        ORDER BY BIZ_NAME
+        FETCH FIRST 20 ROWS ONLY
+    </select>
+
+    <select id="findByBizStatus" resultType="MasterMap">
+        SELECT <include refid="columns"/>
+        FROM MODEL_RESTAURANT
+        WHERE BIZ_STATUS_NM = #{bizStatusNm}
+        ORDER BY BIZ_NAME
         FETCH FIRST 20 ROWS ONLY
     </select>
 

@@ -241,3 +241,6 @@ List<MasterMap> findByName(@Param("name") String name);
 | `chat.max-history-turns` | 10 | 유지할 대화 이력 턴 수 |
 | `spring.ai.google.genai.chat.model` | gemini-2.5-flash | Gemini 모델 |
 | `java.server.url` | http://localhost:8080 | 외부 주문 API 베이스 URL |
+
+<img width="1904" height="896" alt="image" src="https://github.com/user-attachments/assets/4c1bf1ec-91d5-4af0-9543-68b514b71696" />
+

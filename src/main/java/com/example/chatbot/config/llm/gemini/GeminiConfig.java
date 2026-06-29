@@ -1,4 +1,4 @@
-package com.example.chatbot.config;
+package com.example.chatbot.config.llm.gemini;
 
 import com.google.genai.Client;
 import org.springframework.ai.chat.client.ChatClient;
@@ -10,12 +10,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-public class AiConfig {
+public class GeminiConfig {
 
     private final String apiKey;
     private final String model;
 
-    public AiConfig(
+    public GeminiConfig(
             @Value("${spring.ai.google.genai.api-key:}") String apiKey,
             @Value("${spring.ai.google.genai.chat.model:gemini-2.5-flash}") String model) {
         this.apiKey = apiKey;

@@ -9,9 +9,11 @@ import java.util.List;
 @Mapper
 public interface RestaurantMapper {
 
-    MasterMap findById(@Param("restaurantId") int restaurantId);
+    MasterMap findById(@Param("id") int id);
 
-    List<MasterMap> findByName(@Param("name") String name);
+    List<MasterMap> findByName(@Param("bizName") String bizName);
 
-    List<MasterMap> findByCategory(@Param("category") String category);
+    List<MasterMap> findByFoodType(@Param("foodType") String foodType);
+
+    List<MasterMap> findByBizStatus(@Param("bizStatusNm") String bizStatusNm);
 }

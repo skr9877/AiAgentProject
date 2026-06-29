@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.chatbot.tools.order.mapper.OrderMapper">
+
+    <select id="findByCustomer" resultType="com.example.chatbot.tools.order.entity.Order">
+        SELECT order_id,
+               product_id,
+               product_name,
+               quantity,
+               total_price,
+               status,
+               TO_CHAR(order_date) AS order_date
+        FROM orders
+        WHERE customer_id = #{customerId}
+        ORDER BY order_date DESC
+        FETCH FIRST 20 ROWS ONLY
+    </select>
+
+    <select id="findById" resultType="com.example.chatbot.tools.order.entity.Order">
+        SELECT o.order_id,
+               o.customer_id,
+               o.product_id,
+               p.product_name,
+               o.quantity,
+               o.total_price,
+               o.status,
+               TO_CHAR(o.order_date) AS order_date,
+               o.delivery_address
+        FROM orders o
+        JOIN products p ON o.product_id = p.product_id
+        WHERE o.order_id = #{orderId}
+    </select>
+
+</mapper>
